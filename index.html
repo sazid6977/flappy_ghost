@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Bird</title>
+    <style>
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1D1930;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #loading-screen h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #loading-screen.offline h1 {
+            font-size: 24px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 8px solid white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* General Styles */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #83a4d4, #b6fbff);
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Home Screen */
+        #home-screen {
+            text-align: center;
+            color: white;
+            background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/homescreen.jpg');
+            background-size: cover;
+            background-position: center;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            display: none; /* Initially hidden */
+        }
+
+        #home-screen h1 {
+            font-size: 50px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Start Button Container */
+        .start-button-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Start Button */
+        #start-btn {
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 150px;
+            height: 150px;
+        }
+
+        #start-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #start-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Settings Button */
+        #settings-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #settings-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #settings-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Settings Modal */
+        #settings-modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/Background.jpg');
+            background-size: cover;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            z-index: 5;
+            animation: slideDown 0.3s ease-out;
+            width: 80%;
+            max-width: 400px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideDown {
+            from {
+                top: 40%;
+                opacity: 0;
+            }
+            to {
+                top: 50%;
+                opacity: 1;
+            }
+        }
+
+        #settings-modal h2 {
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .setting-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            font-size: 18px;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2ecc71;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        /* Pipe Selection */
+        .pipe-selection {
+            margin-top: 20px;
+        }
+
+        .pipe-options {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pipe-option {
+            width: 60px;
+            height: 120px;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            margin: 5px;
+        }
+
+        .pipe-option.locked {
+            filter: brightness(0.5);
+        }
+
+        .pipe-option.locked:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .pipe-option.locked:before {
+            content: attr(data-required-score);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .pipe-option.selected {
+            border: 3px solid #2ecc71;
+        }
+
+        /* High Score in Settings */
+        .high-score-setting {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #f1c40f;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Close Button (Cross) */
+        #close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        #close-btn:hover {
+            color: #e74c3c;
+        }
+
+        /* Game Container */
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 600px;
+            display: none;
+            background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/insidebackground.jpg');
+            background-size: cover;
+            background-position: center;
+            margin: 0 auto;
+        }
+
+        /* Canvas Styling */
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            background: transparent;
+        }
+
+        /* Score Display */
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        /* Countdown Display */
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+            z-index: 2;
+            display: none;
+        }
+
+        /* Game Over Screen */
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            z-index: 3;
+            border: 2px solid #fff;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        /* Restart Button */
+        #restart-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #453C73;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        #restart-btn:hover {
+            transform: scale(1.1);
+            background: #2980b9;
+        }
+
+        /* Back Button */
+        #back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: none;
+            z-index: 4;
+            width: 40px;
+            height: 40px;
+        }
+
+        #back-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #back-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Sound and Music Icons */
+        .sound-icon, .music-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 480px) {
+            #home-screen h1 {
+                font-size: 36px;
+            }
+
+            #start-btn {
+                width: 120px;
+                height: 120px;
+            }
+
+            #settings-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            #score-display {
+                font-size: 30px;
+            }
+
+            #countdown {
+                font-size: 60px;
+            }
+
+            .game-over h2 {
+                font-size: 24px;
+            }
+
+            .setting-option {
+                font-size: 16px;
+            }
+
+            .toggle-switch {
+                width: 50px;
+                height: 25px;
+            }
+
+            .toggle-slider:before {
+                height: 18px;
+                width: 18px;
+            }
+
+            input:checked + .toggle-slider:before {
+                transform: translateX(25px);
+            }
+
+            .pipe-option {
+                width: 50px;
+                height: 100px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            #game-container {
+                max-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <h1>Loading...</h1>
+        <div class="loader"></div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home-screen">
+        <div class="start-button-container">
+            <button id="start-btn"><img src="https://raw.githubusercontent.com/sazid6977/my-music/main/play.png" alt="Start Game"></button>
+        </div>
+        <button id="settings-btn"><img src="https://raw.githubusercontent.com/sazid6977/my-music/main/sitting.png" alt="Settings"></button>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal">
+            <button id="close-btn">×</button>
+            <h2>Settings</h2>
+            
+            <div class="setting-option">
+                <div style="display: flex; align-items: center;">
+                    <img src="https://raw.githubusercontent.com/sazid6977/my-music/main/sound.png" class="sound-icon" alt="Sound">
+                    <span>Sound Effects</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="sound-effects-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-option">
+                <div style="display: flex; align-items: center;">
+                    <img src="https://raw.githubusercontent.com/sazid6977/my-music/main/music.png" class="music-icon" alt="Music">
+                    <span>Music</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="music-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="high-score-setting">
+                Your High Score: <span id="high-score-value">0</span>
+            </div>
+            
+            <div class="pipe-selection">
+                <h3>Select Pipe Style</h3>
+                <div class="pipe-options">
+                    <div class="pipe-option selected" id="pipe-1" style="background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/pipegreen.png')"></div>
+                    <div class="pipe-option locked" id="pipe-2" data-required-score="25" style="background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/pipe2.png')"></div>
+                    <div class="pipe-option locked" id="pipe-3" data-required-score="50" style="background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/pipe3.png')"></div>
+                    <div class="pipe-option locked" id="pipe-4" data-required-score="100" style="background-image: url('https://raw.githubusercontent.com/sazid6977/my-music/main/pipe4.png')"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <!-- Score Display -->
+        <div id="score-display">0</div>
+        
+        <!-- Countdown Display -->
+        <div id="countdown"></div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over" id="game-over">
+            <h2>Game Over!</h2>
+            <p>Score: <span id="final-score">0</span></p>
+            <button id="restart-btn">Play Again</button>
+        </div>
+
+        <!-- Back Button -->
+        <button id="back-btn"><img src="https://raw.githubusercontent.com/sazid6977/my-music/main/back.png" alt="Back"></button>
+
+        <!-- Game Canvas -->
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <script>
+        // Check internet connection
+        function checkInternetConnection() {
+            if (!navigator.onLine) {
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.innerHTML = '<h1>You do not have an internet connection</h1>';
+                loadingScreen.classList.add('offline');
+                loadingScreen.style.backgroundColor = '#000';
+                return false;
+            }
+            return true;
+        }
+
+        // Game Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const countdownDisplay = document.getElementById('countdown');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScore = document.getElementById('final-score');
+        const homeScreen = document.getElementById('home-screen');
+        const gameContainer = document.getElementById('game-container');
+        const backBtn = document.getElementById('back-btn');
+        const highScoreValue = document.getElementById('high-score-value');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeBtn = document.getElementById('close-btn');
+        const soundEffectsToggle = document.getElementById('sound-effects-toggle');
+        const musicToggle = document.getElementById('music-toggle');
+        const pipeOptions = document.querySelectorAll('.pipe-option');
+
+        // Set canvas size based on container
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // Reset bird position when resizing
+            if (bird) {
+                bird.y = canvas.height / 2;
+            }
+        }
+
+        // Game Variables
+        let bird = {
+            x: 50,
+            y: 300,
+            velocity: 0,
+            gravity: 0.5,
+            jump: -8,
+            size: 20
+        };
+
+        let pipes = [];
+        let score = 0;
+        let gameLoop;
+        let isGameRunning = false;
+        let pipeGap = 150;
+        let pipeWidth = 50;
+        let pipeSpacing = 200;
+        
+        // Pipe selection
+        let currentPipeImage = new Image();
+        currentPipeImage.src = 'https://raw.githubusercontent.com/sazid6977/my-music/main/pipegreen.png';
+        let unlockedPipes = [1];
+
+        // High Score
+        let highScore = localStorage.getItem('flappyBirdHighScore') || 0;
+        highScoreValue.textContent = highScore;
+
+        // Sound Effects and Music
+        let soundEffectsEnabled = true;
+        let musicEnabled = true;
+
+        // Load Sound Effects and Music
+        const homeScreenMusic = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/homescreen.mp3');
+        const settingSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/settingsound.wav');
+        const soundButtonSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/back.ogg');
+        const musicButtonSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/back.ogg');
+        const closeButtonSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/×button.wav');
+        const startGameSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/statesound.wav');
+        const backButtonSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/×button.wav');
+        const gameBackgroundMusic = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/title.mp3');
+        const gameOverSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/death.mp3');
+        const birdFlySound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/game.mp3');
+        const levelUpSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/Coin3.mp3');
+        const countdownSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/123sound.mp3');
+        const goSound = new Audio('https://raw.githubusercontent.com/sazid6977/my-music/main/ss.mp3'); // Reusing game sound for "Go!"
+
+        // Set loop for music tracks
+        homeScreenMusic.loop = true;
+        gameBackgroundMusic.loop = true;
+
+        // Play Home Screen Music
+        function playHomeScreenMusic() {
+            if (musicEnabled) {
+                homeScreenMusic.play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
+
+        // Stop Home Screen Music
+        function stopHomeScreenMusic() {
+            homeScreenMusic.pause();
+            homeScreenMusic.currentTime = 0;
+        }
+
+        // Play Game Background Music
+        function playGameBackgroundMusic() {
+            if (musicEnabled) {
+                gameBackgroundMusic.play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
+
+        // Stop Game Background Music
+        function stopGameBackgroundMusic() {
+            gameBackgroundMusic.pause();
+            gameBackgroundMusic.currentTime = 0;
+        }
+
+        // Play Sound Effect
+        function playSound(sound) {
+            if (soundEffectsEnabled) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Sound play failed:", e));
+            }
+        }
+
+        // Load Images
+        const homeScreenImage = new Image();
+        homeScreenImage.src = 'https://raw.githubusercontent.com/sazid6977/my-music/main/homescreen.jpg';
+
+        const birdImage = new Image();
+        birdImage.src = 'https://raw.githubusercontent.com/sazid6977/my-music/main/bird.png';
+
+        const backgroundImage = new Image();
+        backgroundImage.src = 'https://raw.githubusercontent.com/sazid6977/my-music/main/insidebackground.jpg';
+
+        // Draw Bird
+        function drawBird() {
+            ctx.drawImage(birdImage, bird.x - bird.size, bird.y - bird.size, bird.size * 2, bird.size * 2);
+        }
+
+        // Draw Pipe
+        function drawPipe(pipe) {
+            // Top Pipe
+            ctx.drawImage(currentPipeImage, pipe.x, 0, pipeWidth, pipe.top);
+
+            // Bottom Pipe
+            ctx.drawImage(currentPipeImage, pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - (pipe.top + pipeGap));
+        }
+
+        // Create Pipe
+        function createPipe() {
+            const minHeight = 50;
+            const maxHeight = canvas.height - pipeGap - minHeight;
+            const top = Math.random() * (maxHeight - minHeight) + minHeight;
+            pipes.push({ x: canvas.width, top: top, passed: false });
+        }
+
+        // Check Collision
+        function checkCollision(pipe) {
+            return (
+                bird.x + bird.size > pipe.x &&
+                bird.x - bird.size < pipe.x + pipeWidth &&
+                (bird.y - bird.size < pipe.top || bird.y + bird.size > pipe.top + pipeGap)
+            );
+        }
+
+        // Update Game
+        function updateGame() {
+            // Bird Physics
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            // Pipes
+            if (isGameRunning) {
+                if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - pipeSpacing) {
+                    createPipe();
+                }
+
+                pipes.forEach(pipe => {
+                    pipe.x -= 2;
+
+                    if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+                        score++;
+                        scoreDisplay.textContent = score;
+                        pipe.passed = true;
+                        playSound(levelUpSound);
+                        
+                        // Check if new pipes should be unlocked
+                        checkPipeUnlocks();
+                    }
+
+                    if (checkCollision(pipe) || bird.y + bird.size > canvas.height || bird.y - bird.size < 0) {
+                        gameOver();
+                    }
+                });
+
+                pipes = pipes.filter(pipe => pipe.x > -pipeWidth);
+            }
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background
+            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+            // Draw Elements
+            drawBird();
+            pipes.forEach(drawPipe);
+        }
+        
+        // Check if new pipes should be unlocked based on score
+        function checkPipeUnlocks() {
+            if (score >= 25 && !unlockedPipes.includes(2)) {
+                unlockedPipes.push(2);
+                document.getElementById('pipe-2').classList.remove('locked');
+            }
+            if (score >= 50 && !unlockedPipes.includes(3)) {
+                unlockedPipes.push(3);
+                document.getElementById('pipe-3').classList.remove('locked');
+            }
+            if (score >= 100 && !unlockedPipes.includes(4)) {
+                unlockedPipes.push(4);
+                document.getElementById('pipe-4').classList.remove('locked');
+            }
+        }
+
+        // Jump
+        function jump() {
+            if (isGameRunning) {
+                bird.velocity = bird.jump;
+                playSound(birdFlySound);
+            }
+        }
+
+        // Game Over
+        function gameOver() {
+            isGameRunning = false;
+            finalScore.textContent = score;
+            gameOverScreen.style.display = 'block';
+            backBtn.style.display = 'block';
+            cancelAnimationFrame(gameLoop);
+            playSound(gameOverSound);
+            stopGameBackgroundMusic();
+
+            // Update High Score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('flappyBirdHighScore', highScore);
+                highScoreValue.textContent = highScore;
+            }
+        }
+
+        // Reset Game
+        function resetGame() {
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            pipes = [];
+            score = 0;
+            scoreDisplay.textContent = '0';
+            gameOverScreen.style.display = 'none';
+            backBtn.style.display = 'none';
+        }
+
+        // Countdown before game starts
+        function startCountdown() {
+            // Stop any background music at the start of countdown
+            stopGameBackgroundMusic();
+            
+            let count = 3;
+            countdownDisplay.style.display = 'block';
+            countdownDisplay.textContent = count;
+            playSound(countdownSound);
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownDisplay.textContent = count;
+                    playSound(countdownSound);
+                } else {
+                    countdownDisplay.textContent = "Go!";
+                    playSound(goSound);
+                    setTimeout(() => {
+                        clearInterval(countdownInterval);
+                        countdownDisplay.style.display = 'none';
+                        isGameRunning = true;
+                        
+                        // Start background music when countdown is finished
+                        playGameBackgroundMusic();
+                        
+                        gameLoop = requestAnimationFrame(function animate() {
+                            updateGame();
+                            if (isGameRunning) {
+                                requestAnimationFrame(animate);
+                            }
+                        });
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        // Start Game
+        function startGame() {
+            playSound(startGameSound);
+            resetGame();
+            homeScreen.style.display = 'none';
+            gameContainer.style.display = 'block';
+            stopHomeScreenMusic();
+            
+            // Resize canvas when starting game
+            resizeCanvas();
+            
+            startCountdown();
+        }
+
+        // Exit Game (Back Button)
+        function exitGame() {
+            playSound(backButtonSound);
+            resetGame();
+            homeScreen.style.display = 'block';
+            gameContainer.style.display = 'none';
+            stopGameBackgroundMusic();
+            playHomeScreenMusic();
+        }
+
+        // Toggle Settings Modal
+        settingsBtn.addEventListener('click', () => {
+            playSound(settingSound);
+            settingsModal.style.display = 'block';
+        });
+
+        // Close Settings Modal
+        closeBtn.addEventListener('click', () => {
+            playSound(closeButtonSound);
+            settingsModal.style.display = 'none';
+        });
+
+        // Toggle Sound Effects
+        soundEffectsToggle.addEventListener('change', () => {
+            playSound(soundButtonSound);
+            soundEffectsEnabled = soundEffectsToggle.checked;
+        });
+
+        // Toggle Music
+        musicToggle.addEventListener('change', () => {
+            playSound(musicButtonSound);
+            musicEnabled = musicToggle.checked;
+            if (musicEnabled) {
+                if (gameContainer.style.display === 'block') {
+                    playGameBackgroundMusic();
+                } else {
+                    playHomeScreenMusic();
+                }
+            } else {
+                stopGameBackgroundMusic();
+                stopHomeScreenMusic();
+            }
+        });
+        
+        // Handle pipe selection
+        pipeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                if (!option.classList.contains('locked')) {
+                    pipeOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    const pipeId = option.id.split('-')[1];
+                    currentPipeImage.src = getPipeImageUrl(pipeId);
+                    playSound(soundButtonSound);
+                }
+            });
+        });
+        
+        // Get pipe image URL based on selection
+        function getPipeImageUrl(pipeId) {
+            switch(pipeId) {
+                case '1': return 'https://raw.githubusercontent.com/sazid6977/my-music/main/pipegreen.png';
+                case '2': return 'https://raw.githubusercontent.com/sazid6977/my-music/main/pipe2.png';
+                case '3': return 'https://raw.githubusercontent.com/sazid6977/my-music/main/pipe3.png';
+                case '4': return 'https://raw.githubusercontent.com/sazid6977/my-music/main/pipe4.png';
+                default: return 'https://raw.githubusercontent.com/sazid6977/my-music/main/pipegreen.png';
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') jump();
+        });
+
+        canvas.addEventListener('click', jump);
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        backBtn.addEventListener('click', exitGame);
+        
+        // Touch support for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        });
+        
+        // Initialize pipe options
+        function initializePipeOptions() {
+            pipeOptions.forEach(option => {
+                const pipeId = parseInt(option.id.split('-')[1]);
+                if (!unlockedPipes.includes(pipeId)) {
+                    option.classList.add('locked');
+                }
+            });
+        }
+        
+        // Handle visibility change to pause music when app is in background
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Page is hidden (app is in background or Recent Apps)
+                stopGameBackgroundMusic();
+                stopHomeScreenMusic();
+            } else {
+                // Page is visible again
+                if (musicEnabled) {
+                    if (gameContainer.style.display === 'block') {
+                        playGameBackgroundMusic();
+                    } else if (homeScreen.style.display === 'flex') {
+                        playHomeScreenMusic();
+                    }
+                }
+            }
+        });
+        
+        // Simulate loading process
+        function simulateLoading() {
+            // First check internet connection
+            if (!checkInternetConnection()) {
+                return;
+            }
+            
+            // In a real game, you would load all assets here
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    homeScreen.style.display = 'flex';
+                    playHomeScreenMusic();
+                    
+                    // Initialize canvas size
+                    resizeCanvas();
+                }, 500);
+            }, 2000); // Simulate 2 seconds loading time
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (gameContainer.style.display === 'block') {
+                resizeCanvas();
+            }
+        });
+        
+        // Start loading process when page loads
+        window.addEventListener('load', () => {
+            initializePipeOptions();
+            simulateLoading();
+        });
+    </script>
+</body>
+</html>
